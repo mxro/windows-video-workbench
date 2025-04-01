@@ -24,17 +24,26 @@ if not exist "%FFMPEG_PATH%" (
 set "FILELIST=%TEMP%\merge_filelist.txt"
 if exist "%FILELIST%" del "%FILELIST%"
 
+:: Variables to store the first file's extension
+set "FIRST_FILE_EXT=.mp4"
+set "FIRST_FILE="
+
+:: Create a simple timestamp for the output file
+set "TIMESTAMP=%date:~10,4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6,2%"
+set "TIMESTAMP=%TIMESTAMP: =0%"
+
 :: Check if files were dropped onto the script
 if "%~1" neq "" (
     :: Process dropped files
     echo Files were dropped onto the script.
     echo.
     
-    :: Create output filename based on current date and time
-    for /f "tokens=1-5 delims=/ " %%a in ('echo %date% %time%') do (
-        set "OUTPUT_FILE=merged_%%a%%b%%c_%%d%%e.mp4"
-        set "OUTPUT_FILE=!OUTPUT_FILE::=!"
-    )
+    :: Get the first file and its extension
+    set "FIRST_FILE=%~1"
+    set "FIRST_FILE_EXT=%~x1"
+    
+    echo First file: %FIRST_FILE%
+    echo Extension detected: %FIRST_FILE_EXT%
     
     :: Create file list for ffmpeg
     for %%F in (%*) do (
@@ -46,19 +55,21 @@ if "%~1" neq "" (
     echo No files specified. Looking for media files in the current directory...
     echo.
     
-    :: Create output filename based on current date and time
-    for /f "tokens=1-5 delims=/ " %%a in ('echo %date% %time%') do (
-        set "OUTPUT_FILE=merged_%%a%%b%%c_%%d%%e.mp4"
-        set "OUTPUT_FILE=!OUTPUT_FILE::=!"
-    )
-    
     set found=0
+    :: First pass to find the first file and get its extension
     for %%F in (*.mp4 *.avi *.mkv *.mov *.wmv *.flv *.webm *.mp3 *.wav *.aac *.ogg *.flac *.m4a) do (
-        set found=1
+        if !found! equ 0 (
+            set "FIRST_FILE=%%F"
+            set "FIRST_FILE_EXT=%%~xF"
+            echo First file found: !FIRST_FILE!
+            echo Extension detected: !FIRST_FILE_EXT!
+            set found=1
+        )
         echo file '%%~fF' >> "%FILELIST%"
         echo Added: %%~nxF
     )
     
+    :: If no files found, exit
     if !found! equ 0 (
         echo No media files found in the current directory.
         echo Please drop files onto this script or place media files in the same folder.
@@ -81,9 +92,24 @@ if %count% LSS 2 (
     goto :cleanup
 )
 
+:: Ensure extension starts with a dot
+if "!FIRST_FILE_EXT:~0,1!" neq "." (
+    set "FIRST_FILE_EXT=.!FIRST_FILE_EXT!"
+)
+
+:: If extension is empty or invalid, default to .mp4
+if "!FIRST_FILE_EXT!"=="" (
+    set "FIRST_FILE_EXT=.mp4"
+    echo No extension detected, defaulting to .mp4
+)
+
+:: Create the output filename
+set "OUTPUT_FILE=merged_%TIMESTAMP%%FIRST_FILE_EXT%"
+
 echo.
 echo Found %count% files to merge.
 echo Output file will be: %OUTPUT_FILE%
+echo Using extension: %FIRST_FILE_EXT%
 echo.
 echo Starting merge process...
 
@@ -97,6 +123,7 @@ if %ERRORLEVEL% EQU 0 (
 ) else (
     echo.
     echo Error occurred during merging.
+    echo Command used: "%FFMPEG_PATH%" -f concat -safe 0 -i "%FILELIST%" -c copy "%OUTPUT_FILE%"
 )
 
 :cleanup
