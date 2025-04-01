@@ -1,0 +1,9 @@
+Implement @/split/split.bat 
+
+this should use the ffmpeg binary in @/ffmpeg/ 
+
+it should look for any audio or video file in the same folder the script is located in (or accept any file that is dropped onto the script)
+
+then it should split it into sections no longer than 25 min.
+
+also add a README.md in this folder to explain how to use and configure the script.
