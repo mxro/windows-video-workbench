@@ -29,6 +29,8 @@ set "TIMESTAMP=%date:~10,4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6
 set "TIMESTAMP=%TIMESTAMP: =0%"
 set "OUTPUT_DIR=%BATCH_DIR%converted_%TIMESTAMP%"
 
+:: Create output directory if it doesn't exist
+if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
 
 :: Check if files were dropped onto the script
 if "%~1" neq "" (
@@ -41,10 +43,7 @@ if "%~1" neq "" (
     echo Number of files to process: !file_count!
     echo.
     
-    :: Create output directory if it doesn't exist
-    if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
-    
-    :: Process each dropped file
+    :: Process ONLY the dropped files
     set png_count=0
     for %%F in (%*) do (
         if /i "%%~xF"==".png" (
@@ -63,6 +62,9 @@ if "%~1" neq "" (
     echo No files specified. Looking for PNG files in the current directory...
     echo.
     
+    :: Change to the batch file's directory to ensure we're looking in the right place
+    pushd "%BATCH_DIR%"
+    
     set found=0
     :: Check if any PNG files exist
     for %%F in (*.png) do (
@@ -75,11 +77,9 @@ if "%~1" neq "" (
     if !found! equ 0 (
         echo No PNG files found in the current directory.
         echo Please drop PNG files onto this script or place PNG files in the same folder.
+        popd
         goto :end
     )
-    
-    :: Create output directory if it doesn't exist
-    if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
     
     :: Convert all PNG files in the current directory
     echo Converting all PNG files in the current directory...
@@ -95,6 +95,9 @@ if "%~1" neq "" (
     
     echo Total PNG files converted: !png_count!
     echo All files converted to: converted_%TIMESTAMP%
+    
+    :: Return to the original directory
+    popd
 )
 
 echo.

@@ -28,6 +28,9 @@ set "TIMESTAMP=%date:~10,4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6
 set "TIMESTAMP=%TIMESTAMP: =0%"
 set "OUTPUT_DIR=%BATCH_DIR%converted_%TIMESTAMP%"
 
+:: Create output directory if it doesn't exist
+if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
+
 :: Check if files were dropped onto the script
 if "%~1" neq "" (
     :: Process dropped files
@@ -39,10 +42,7 @@ if "%~1" neq "" (
     echo Number of files to process: !file_count!
     echo.
     
-    :: Create output directory if it doesn't exist
-    if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
-    
-    :: Process each dropped file
+    :: Process ONLY the dropped files
     set heic_count=0
     for %%F in (%*) do (
         if /i "%%~xF"==".heic" (
@@ -61,6 +61,9 @@ if "%~1" neq "" (
     echo No files specified. Looking for HEIC files in the current directory...
     echo.
     
+    :: Change to the batch file's directory to ensure we're looking in the right place
+    pushd "%BATCH_DIR%"
+    
     set found=0
     :: Check if any HEIC files exist
     for %%F in (*.heic) do (
@@ -73,11 +76,9 @@ if "%~1" neq "" (
     if !found! equ 0 (
         echo No HEIC files found in the current directory.
         echo Please drop HEIC files onto this script or place HEIC files in the same folder.
+        popd
         goto :end
     )
-    
-    :: Create output directory if it doesn't exist
-    if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
     
     :: Convert all HEIC files in the current directory
     echo Converting all HEIC files in the current directory...
@@ -88,6 +89,9 @@ if "%~1" neq "" (
     
     "%CONVERTER_PATH%" --path . -q 95 -t "%OUTPUT_DIR%" --skip-prompt --not-recursive
     echo All !heic_count! files converted to: converted_%TIMESTAMP%
+    
+    :: Return to the original directory
+    popd
 )
 
 echo.

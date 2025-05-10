@@ -53,7 +53,7 @@ if "%~1" neq "" (
     echo First file: %FIRST_FILE%
     echo Extension detected: %FIRST_FILE_EXT%
     
-    :: Create file list for ffmpeg
+    :: Create file list for ffmpeg - ONLY for the dropped files
     for %%F in (%*) do (
         echo file '%%~fF' >> "%FILELIST%"
         echo Added: %%~nxF
@@ -62,6 +62,9 @@ if "%~1" neq "" (
     :: No files were dropped, process all media files in the current directory
     echo No files specified. Looking for media files in the current directory...
     echo.
+    
+    :: Change to the batch file's directory to ensure we're looking in the right place
+    pushd "%BATCH_DIR%"
     
     set found=0
     :: First pass to find the first file and get its extension
@@ -81,8 +84,12 @@ if "%~1" neq "" (
     if !found! equ 0 (
         echo No media files found in the current directory.
         echo Please drop files onto this script or place media files in the same folder.
+        popd
         goto :cleanup
     )
+    
+    :: Return to the original directory
+    popd
 )
 
 :: Check if we have files to merge
