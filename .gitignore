@@ -7,3 +7,5 @@ ffmpeg/
 *.aac
 *.m4a
 *.wav
+*.heic
+*.jpg
