@@ -14,8 +14,11 @@ echo.
 set MAX_LENGTH=1500
 
 :: Path to ffmpeg executable
-set FFMPEG_PATH=..\ffmpeg\bin\ffmpeg.exe
-set FFPROBE_PATH=..\ffmpeg\bin\ffprobe.exe
+set "BATCH_DIR=%~dp0"
+:: Go up one directory from the batch file location to find the ffmpeg folder
+for %%I in ("%BATCH_DIR%..") do set "ROOT_DIR=%%~fI\"
+set "FFMPEG_PATH=%ROOT_DIR%ffmpeg\bin\ffmpeg.exe"
+set "FFPROBE_PATH=%ROOT_DIR%ffmpeg\bin\ffprobe.exe"
 
 :: Check if ffmpeg exists
 if not exist "%FFMPEG_PATH%" (
@@ -26,6 +29,20 @@ if not exist "%FFMPEG_PATH%" (
 
 :: Check if a file was dropped onto the script
 if "%~1" neq "" (
+    echo File was dropped onto the script.
+    
+    :: Count the number of files
+    set file_count=0
+    for %%F in (%*) do set /a file_count+=1
+    echo Number of files to process: !file_count!
+    echo.
+    
+    :: Process only the first file if multiple files were dropped
+    if !file_count! GTR 1 (
+        echo Note: Only the first file will be processed.
+        echo.
+    )
+    
     call :process_file "%~1"
     goto :end
 )
@@ -70,14 +87,14 @@ set /a segments=(!duration!+%MAX_LENGTH%-1)/%MAX_LENGTH%
 echo Number of segments: !segments!
 
 :: Create output directory if it doesn't exist
-set output_dir=%file_name%_split
+set output_dir=%BATCH_DIR%%file_name%_split
 if not exist "%output_dir%" mkdir "%output_dir%"
 
 :: Split the file into segments
 echo Splitting file into !segments! segments...
 echo.
 
-"%FFMPEG_PATH%" -i "%input_file%" -c copy -map 0 -segment_time %MAX_LENGTH% -f segment -reset_timestamps 1 "%output_dir%\%file_name%_part%%02d%file_ext%"
+"%FFMPEG_PATH%" -y -i "%input_file%" -c copy -map 0 -segment_time %MAX_LENGTH% -f segment -reset_timestamps 1 "%output_dir%\%file_name%_part%%02d%file_ext%"
 
 echo.
 echo Splitting complete! Output files are in the "%output_dir%" folder.

@@ -11,7 +11,10 @@ echo ---------------------
 echo.
 
 :: Path to heicConverter executable
-set CONVERTER_PATH=..\tools\heicConverter.exe
+set "BATCH_DIR=%~dp0"
+:: Go up one directory from the batch file location to find the tools folder
+for %%I in ("%BATCH_DIR%..") do set "ROOT_DIR=%%~fI\"
+set "CONVERTER_PATH=%ROOT_DIR%tools\heicConverter.exe"
 
 :: Check if converter exists
 if not exist "%CONVERTER_PATH%" (
@@ -23,27 +26,36 @@ if not exist "%CONVERTER_PATH%" (
 :: Create a timestamp for the output directory
 set "TIMESTAMP=%date:~10,4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6,2%"
 set "TIMESTAMP=%TIMESTAMP: =0%"
-set "OUTPUT_DIR=converted_%TIMESTAMP%"
+set "OUTPUT_DIR=%BATCH_DIR%converted_%TIMESTAMP%"
 
 :: Check if files were dropped onto the script
 if "%~1" neq "" (
     :: Process dropped files
     echo Files were dropped onto the script.
+    
+    :: Count the number of files
+    set file_count=0
+    for %%F in (%*) do set /a file_count+=1
+    echo Number of files to process: !file_count!
     echo.
     
     :: Create output directory if it doesn't exist
     if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
     
     :: Process each dropped file
+    set heic_count=0
     for %%F in (%*) do (
         if /i "%%~xF"==".heic" (
-            echo Converting: %%~nxF
+            set /a heic_count+=1
+            echo Converting [!heic_count!]: %%~nxF
             "%CONVERTER_PATH%" --files "%%~fF" -q 95 -t "%OUTPUT_DIR%" --skip-prompt
-            echo Converted to: %OUTPUT_DIR%\%%~nF.jpg
+            echo Converted to: converted_%TIMESTAMP%\%%~nF.jpg
         ) else (
             echo Skipped: %%~nxF (not a HEIC file)
         )
     )
+    
+    echo Total HEIC files converted: !heic_count!
 ) else (
     :: No files were dropped, process all HEIC files in the current directory
     echo No files specified. Looking for HEIC files in the current directory...
@@ -69,13 +81,18 @@ if "%~1" neq "" (
     
     :: Convert all HEIC files in the current directory
     echo Converting all HEIC files in the current directory...
+    
+    set heic_count=0
+    for %%F in (*.heic) do set /a heic_count+=1
+    echo Number of HEIC files found: !heic_count!
+    
     "%CONVERTER_PATH%" --path . -q 95 -t "%OUTPUT_DIR%" --skip-prompt --not-recursive
-    echo All files converted to: %OUTPUT_DIR%
+    echo All !heic_count! files converted to: converted_%TIMESTAMP%
 )
 
 echo.
 echo Conversion completed!
-echo Converted files are in the "%OUTPUT_DIR%" directory.
+echo Converted files are in the "converted_%TIMESTAMP%" directory.
 
 :end
 echo.

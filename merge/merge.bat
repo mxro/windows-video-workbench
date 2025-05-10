@@ -11,7 +11,10 @@ echo ---------------------
 echo.
 
 :: Path to ffmpeg executable
-set FFMPEG_PATH=..\ffmpeg\bin\ffmpeg.exe
+set "BATCH_DIR=%~dp0"
+:: Go up one directory from the batch file location to find the ffmpeg folder
+for %%I in ("%BATCH_DIR%..") do set "ROOT_DIR=%%~fI\"
+set "FFMPEG_PATH=%ROOT_DIR%ffmpeg\bin\ffmpeg.exe"
 
 :: Check if ffmpeg exists
 if not exist "%FFMPEG_PATH%" (
@@ -36,6 +39,11 @@ set "TIMESTAMP=%TIMESTAMP: =0%"
 if "%~1" neq "" (
     :: Process dropped files
     echo Files were dropped onto the script.
+    
+    :: Count the number of files
+    set file_count=0
+    for %%F in (%*) do set /a file_count+=1
+    echo Number of files to process: !file_count!
     echo.
     
     :: Get the first file and its extension
@@ -104,7 +112,7 @@ if "!FIRST_FILE_EXT!"=="" (
 )
 
 :: Create the output filename
-set "OUTPUT_FILE=merged_%TIMESTAMP%%FIRST_FILE_EXT%"
+set "OUTPUT_FILE=%BATCH_DIR%merged_%TIMESTAMP%%FIRST_FILE_EXT%"
 
 echo.
 echo Found %count% files to merge.
@@ -114,7 +122,7 @@ echo.
 echo Starting merge process...
 
 :: Merge the files using ffmpeg's concat demuxer
-"%FFMPEG_PATH%" -f concat -safe 0 -i "%FILELIST%" -c copy "%OUTPUT_FILE%"
+"%FFMPEG_PATH%" -y -f concat -safe 0 -i "%FILELIST%" -c copy "%OUTPUT_FILE%"
 
 if %ERRORLEVEL% EQU 0 (
     echo.
