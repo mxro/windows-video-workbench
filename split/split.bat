@@ -51,6 +51,9 @@ if "%~1" neq "" (
 echo No file specified. Looking for media files in the current directory...
 echo.
 
+:: Change to the batch file's directory to ensure we're looking in the right place
+pushd "%BATCH_DIR%"
+
 set found=0
 for %%F in (*.mp4 *.avi *.mkv *.mov *.wmv *.flv *.webm *.mp3 *.wav *.aac *.ogg *.flac *.m4a) do (
     set found=1
@@ -61,6 +64,9 @@ if !found! equ 0 (
     echo No media files found in the current directory.
     echo Please drop a file onto this script or place media files in the same folder.
 )
+
+:: Return to the original directory
+popd
 
 goto :end
 
