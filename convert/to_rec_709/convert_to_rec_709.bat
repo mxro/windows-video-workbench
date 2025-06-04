@@ -100,7 +100,7 @@ echo Converting Rec 2020 to Rec 709...
 echo.
 
 "%FFMPEG_PATH%" -y -i "!INPUT!" ^
-  -vf "zscale=primaries=bt709:transfer=bt709:matrix=bt709" ^
+  -vf "format=yuv420p10le,tonemap=mobius:param=0.01:desat=0,zscale=r=tv:p=bt709:t=bt709:m=bt709" ^
   -c:v libx264 ^
   -pix_fmt yuv420p ^
   -preset slow ^
