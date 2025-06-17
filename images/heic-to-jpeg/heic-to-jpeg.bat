@@ -12,8 +12,8 @@ echo.
 
 :: Path to heicConverter executable
 set "BATCH_DIR=%~dp0"
-:: Go up one directory from the batch file location to find the tools folder
-for %%I in ("%BATCH_DIR%..") do set "ROOT_DIR=%%~fI\"
+:: Go up two directories from the batch file location to find the tools folder
+for %%I in ("%BATCH_DIR%..\..") do set "ROOT_DIR=%%~fI\"
 set "CONVERTER_PATH=%ROOT_DIR%tools\heicConverter.exe"
 
 :: Check if converter exists
