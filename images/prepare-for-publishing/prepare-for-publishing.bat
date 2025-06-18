@@ -125,7 +125,7 @@ if /i "%extension%"==".heif" set "is_image=1"
 if !is_image! equ 1 (
     set /a image_count+=1
     echo Processing [!image_count!]: %file_name%
-    "%FFMPEG_PATH%" -y -i "%file_path%" -q:v 15 -map_metadata -1 "%OUTPUT_DIR%\%base_name%.jpg"
+    "%FFMPEG_PATH%" -y -i "%file_path%" -q:v 5 -map_metadata -1 "%OUTPUT_DIR%\%base_name%.jpg"
     echo Converted to: published_%TIMESTAMP%\%base_name%.jpg
 ) else (
     echo Skipped: %file_name% (not a supported image file)
