@@ -50,23 +50,31 @@ if "%~1" neq "" (
             echo Converting [!heic_count!]: %%~nxF
             "%CONVERTER_PATH%" --files "%%~fF" -q 95 -t "%OUTPUT_DIR%" --skip-prompt
             echo Converted to: converted_%TIMESTAMP%\%%~nF.jpg
+        ) else if /i "%%~xF"==".heif" (
+            set /a heic_count+=1
+            echo Converting [!heic_count!]: %%~nxF
+            set "temp_heic=%TEMP%\%%~nF.heic"
+            copy /y "%%~fF" "!temp_heic!" >nul
+            "%CONVERTER_PATH%" --files "!temp_heic!" -q 95 -t "%OUTPUT_DIR%" --skip-prompt
+            del "!temp_heic!" >nul 2>&1
+            echo Converted to: converted_%TIMESTAMP%\%%~nF.jpg
         ) else (
-            echo Skipped: %%~nxF (not a HEIC file)
+            echo Skipped: %%~nxF (not a HEIC/HEIF file)
         )
     )
     
-    echo Total HEIC files converted: !heic_count!
+    echo Total HEIC/HEIF files converted: !heic_count!
 ) else (
-    :: No files were dropped, process all HEIC files in the current directory
-    echo No files specified. Looking for HEIC files in the current directory...
+    :: No files were dropped, process all HEIC/HEIF files in the current directory
+    echo No files specified. Looking for HEIC/HEIF files in the current directory...
     echo.
     
     :: Change to the batch file's directory to ensure we're looking in the right place
     pushd "%BATCH_DIR%"
     
     set found=0
-    :: Check if any HEIC files exist
-    for %%F in (*.heic) do (
+    :: Check if any HEIC/HEIF files exist
+    for %%F in (*.heic *.heif) do (
         set found=1
         goto :found_files
     )
@@ -74,20 +82,30 @@ if "%~1" neq "" (
     :found_files
     :: If no files found, exit
     if !found! equ 0 (
-        echo No HEIC files found in the current directory.
-        echo Please drop HEIC files onto this script or place HEIC files in the same folder.
+        echo No HEIC/HEIF files found in the current directory.
+        echo Please drop HEIC/HEIF files onto this script or place them in the same folder.
         popd
         goto :end
     )
     
-    :: Convert all HEIC files in the current directory
-    echo Converting all HEIC files in the current directory...
+    :: Convert all HEIC/HEIF files in the current directory
+    echo Converting all HEIC/HEIF files in the current directory...
     
     set heic_count=0
-    for %%F in (*.heic) do set /a heic_count+=1
-    echo Number of HEIC files found: !heic_count!
+    for %%F in (*.heic *.heif) do set /a heic_count+=1
+    echo Number of HEIC/HEIF files found: !heic_count!
     
-    "%CONVERTER_PATH%" --path . -q 95 -t "%OUTPUT_DIR%" --skip-prompt --not-recursive
+    if exist *.heic (
+        "%CONVERTER_PATH%" --path . -q 95 -t "%OUTPUT_DIR%" --skip-prompt --not-recursive
+    )
+    
+    for %%F in (*.heif) do (
+        set "temp_heic=%TEMP%\%%~nF.heic"
+        copy /y "%%~fF" "!temp_heic!" >nul
+        "%CONVERTER_PATH%" --files "!temp_heic!" -q 95 -t "%OUTPUT_DIR%" --skip-prompt
+        del "!temp_heic!" >nul 2>&1
+    )
+    
     echo All !heic_count! files converted to: converted_%TIMESTAMP%
     
     :: Return to the original directory
