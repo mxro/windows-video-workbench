@@ -23,14 +23,6 @@ if not exist "%CONVERTER_PATH%" (
     goto :end
 )
 
-:: Create a timestamp for the output directory
-set "TIMESTAMP=%date:~10,4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6,2%"
-set "TIMESTAMP=%TIMESTAMP: =0%"
-set "OUTPUT_DIR=%BATCH_DIR%converted_%TIMESTAMP%"
-
-:: Create output directory if it doesn't exist
-if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
-
 :: Check if files were dropped onto the script
 if "%~1" neq "" (
     :: Process dropped files
@@ -48,16 +40,20 @@ if "%~1" neq "" (
         if /i "%%~xF"==".heic" (
             set /a heic_count+=1
             echo Converting [!heic_count!]: %%~nxF
-            "%CONVERTER_PATH%" --files "%%~fF" -q 95 -t "%OUTPUT_DIR%" --skip-prompt
-            echo Converted to: converted_%TIMESTAMP%\%%~nF.jpg
+            set "OUTDIR=%%~dpF"
+            set "OUTDIR=!OUTDIR:~0,-1!"
+            "%CONVERTER_PATH%" --files "%%~fF" -q 95 -t "!OUTDIR!" --skip-prompt
+            echo Converted to: !OUTDIR!\%%~nF.jpg
         ) else if /i "%%~xF"==".heif" (
             set /a heic_count+=1
             echo Converting [!heic_count!]: %%~nxF
+            set "OUTDIR=%%~dpF"
+            set "OUTDIR=!OUTDIR:~0,-1!"
             set "temp_heic=%TEMP%\%%~nF.heic"
             copy /y "%%~fF" "!temp_heic!" >nul
-            "%CONVERTER_PATH%" --files "!temp_heic!" -q 95 -t "%OUTPUT_DIR%" --skip-prompt
+            "%CONVERTER_PATH%" --files "!temp_heic!" -q 95 -t "!OUTDIR!" --skip-prompt
             del "!temp_heic!" >nul 2>&1
-            echo Converted to: converted_%TIMESTAMP%\%%~nF.jpg
+            echo Converted to: !OUTDIR!\%%~nF.jpg
         ) else (
             echo Skipped: %%~nxF (not a HEIC/HEIF file)
         )
@@ -96,17 +92,17 @@ if "%~1" neq "" (
     echo Number of HEIC/HEIF files found: !heic_count!
     
     if exist *.heic (
-        "%CONVERTER_PATH%" --path . -q 95 -t "%OUTPUT_DIR%" --skip-prompt --not-recursive
+        "%CONVERTER_PATH%" --path . -q 95 -t . --skip-prompt --not-recursive
     )
     
     for %%F in (*.heif) do (
         set "temp_heic=%TEMP%\%%~nF.heic"
         copy /y "%%~fF" "!temp_heic!" >nul
-        "%CONVERTER_PATH%" --files "!temp_heic!" -q 95 -t "%OUTPUT_DIR%" --skip-prompt
+        "%CONVERTER_PATH%" --files "!temp_heic!" -q 95 -t . --skip-prompt
         del "!temp_heic!" >nul 2>&1
     )
-    
-    echo All !heic_count! files converted to: converted_%TIMESTAMP%
+
+    echo All !heic_count! files converted to: current directory
     
     :: Return to the original directory
     popd
@@ -114,7 +110,6 @@ if "%~1" neq "" (
 
 echo.
 echo Conversion completed!
-echo Converted files are in the "converted_%TIMESTAMP%" directory.
 
 :end
 echo.
