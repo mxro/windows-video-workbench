@@ -24,14 +24,6 @@ if not exist "%FFMPEG_PATH%" (
     goto :end
 )
 
-:: Create a timestamp for the output directory
-set "TIMESTAMP=%date:~10,4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6,2%"
-set "TIMESTAMP=%TIMESTAMP: =0%"
-set "OUTPUT_DIR=%BATCH_DIR%published_%TIMESTAMP%"
-
-:: Create output directory if it doesn't exist
-if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
-
 :: Check if files were dropped onto the script
 if "%~1" neq "" (
     :: Process dropped files
@@ -46,7 +38,8 @@ if "%~1" neq "" (
     :: Process ONLY the dropped files
     set image_count=0
     for %%F in (%*) do (
-        call :process_image "%%~fF" "%%~nxF" "%%~nF" "%%~xF"
+        set "FILEDIR=%%~dpF"
+        call :process_image "%%~fF" "%%~nxF" "%%~nF" "%%~xF" "!FILEDIR:~0,-1!"
     )
     
     echo Total image files processed: !image_count!
@@ -81,11 +74,10 @@ if "%~1" neq "" (
     
     set image_count=0
     for %%F in (*.jpg *.jpeg *.png *.bmp *.tiff *.tif *.webp *.gif *.heic *.heif) do (
-        call :process_image "%%~fF" "%%~nxF" "%%~nF" "%%~xF"
+        call :process_image "%%~fF" "%%~nxF" "%%~nF" "%%~xF" "%BATCH_DIR%"
     )
     
     echo Total image files processed: !image_count!
-    echo All files processed to: published_%TIMESTAMP%
     
     :: Return to the original directory
     popd
@@ -93,7 +85,7 @@ if "%~1" neq "" (
 
 echo.
 echo Processing completed!
-echo Published files are in the "published_%TIMESTAMP%" directory.
+echo Published files are in the same folder as source images.
 
 :end
 echo.
@@ -108,6 +100,7 @@ set "file_path=%~1"
 set "file_name=%~2"
 set "base_name=%~3"
 set "extension=%~4"
+set "out_dir=%~5"
 
 :: Check if it's a supported image format
 set "is_image=0"
@@ -125,8 +118,8 @@ if /i "%extension%"==".heif" set "is_image=1"
 if !is_image! equ 1 (
     set /a image_count+=1
     echo Processing [!image_count!]: %file_name%
-    "%FFMPEG_PATH%" -y -i "%file_path%" -q:v 5 -map_metadata -1 "%OUTPUT_DIR%\%base_name%.jpg"
-    echo Converted to: published_%TIMESTAMP%\%base_name%.jpg
+    "%FFMPEG_PATH%" -y -i "%file_path%" -q:v 5 -map_metadata -1 "%out_dir%\%base_name%.pub.jpg"
+    echo Converted to: %out_dir%\%base_name%.pub.jpg
 ) else (
     echo Skipped: %file_name% (not a supported image file)
 )
