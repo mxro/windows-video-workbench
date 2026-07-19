@@ -23,14 +23,6 @@ if not exist "%FFMPEG_PATH%" (
     goto :end
 )
 
-:: Create a timestamp for the output directory
-set "TIMESTAMP=%date:~10,4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6,2%"
-set "TIMESTAMP=%TIMESTAMP: =0%"
-set "OUTPUT_DIR=%BATCH_DIR%compressed_%TIMESTAMP%"
-
-:: Create output directory if it doesn't exist
-if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
-
 :: Check if files were dropped onto the script
 if "%~1" neq "" (
     :: Process dropped files
@@ -48,13 +40,17 @@ if "%~1" neq "" (
         if /i "%%~xF"==".jpg" (
             set /a jpeg_count+=1
             echo Compressing [!jpeg_count!]: %%~nxF
-            "%FFMPEG_PATH%" -y -i "%%~fF" -q:v 15 "%OUTPUT_DIR%\%%~nF.jpg"
-            echo Compressed to: compressed_%TIMESTAMP%\%%~nF.jpg
+            set "OUTDIR=%%~dpF"
+            set "OUTDIR=!OUTDIR:~0,-1!"
+            "%FFMPEG_PATH%" -y -i "%%~fF" -q:v 15 "!OUTDIR!\%%~nF.compressed.jpg"
+            echo Compressed to: !OUTDIR!\%%~nF.compressed.jpg
         ) else if /i "%%~xF"==".jpeg" (
             set /a jpeg_count+=1
             echo Compressing [!jpeg_count!]: %%~nxF
-            "%FFMPEG_PATH%" -y -i "%%~fF" -q:v 15 "%OUTPUT_DIR%\%%~nF.jpg"
-            echo Compressed to: compressed_%TIMESTAMP%\%%~nF.jpg
+            set "OUTDIR=%%~dpF"
+            set "OUTDIR=!OUTDIR:~0,-1!"
+            "%FFMPEG_PATH%" -y -i "%%~fF" -q:v 15 "!OUTDIR!\%%~nF.compressed.jpg"
+            echo Compressed to: !OUTDIR!\%%~nF.compressed.jpg
         ) else (
             echo Skipped: %%~nxF (not a JPEG file)
         )
@@ -93,12 +89,11 @@ if "%~1" neq "" (
     for %%F in (*.jpg *.jpeg) do (
         set /a jpeg_count+=1
         echo Compressing [!jpeg_count!]: %%~nxF
-        "%FFMPEG_PATH%" -y -i "%%~fF" -q:v 15 "%OUTPUT_DIR%\%%~nF.jpg"
-        echo Compressed to: compressed_%TIMESTAMP%\%%~nF.jpg
+        "%FFMPEG_PATH%" -y -i "%%~fF" -q:v 15 "%%~dpF%%~nF.compressed.jpg"
+        echo Compressed to: %%~dpF%%~nF.compressed.jpg
     )
     
     echo Total JPEG files compressed: !jpeg_count!
-    echo All files compressed to: compressed_%TIMESTAMP%
     
     :: Return to the original directory
     popd
@@ -106,7 +101,7 @@ if "%~1" neq "" (
 
 echo.
 echo Compression completed!
-echo Compressed files are in the "compressed_%TIMESTAMP%" directory.
+echo Compressed files have been created alongside the originals with the .compressed.jpg suffix.
 
 :end
 echo.
