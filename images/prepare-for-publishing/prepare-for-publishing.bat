@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set HAS_ERROR=0
 
 :: Image Prepare for Publishing
 :: Usage: 
@@ -88,9 +89,11 @@ echo Processing completed!
 echo Published files are in the same folder as source images.
 
 :end
-echo.
-echo Press any key to exit...
-pause >nul
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
 endlocal
 goto :eof
 
@@ -119,6 +122,7 @@ if !is_image! equ 1 (
     set /a image_count+=1
     echo Processing [!image_count!]: %file_name%
     "%FFMPEG_PATH%" -y -i "%file_path%" -q:v 5 -map_metadata -1 "%out_dir%\%base_name%.pub.jpg"
+    if !ERRORLEVEL! neq 0 set HAS_ERROR=1
     echo Converted to: %out_dir%\%base_name%.pub.jpg
 ) else (
     echo Skipped: %file_name% (not a supported image file)

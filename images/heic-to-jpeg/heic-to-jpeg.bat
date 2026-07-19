@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set HAS_ERROR=0
 
 :: HEIC to JPEG Converter
 :: Usage: 
@@ -43,6 +44,7 @@ if "%~1" neq "" (
             set "OUTDIR=%%~dpF"
             set "OUTDIR=!OUTDIR:~0,-1!"
             "%CONVERTER_PATH%" --files "%%~fF" -q 95 -t "!OUTDIR!" --skip-prompt
+            if !ERRORLEVEL! neq 0 set HAS_ERROR=1
             echo Converted to: !OUTDIR!\%%~nF.jpg
         ) else if /i "%%~xF"==".heif" (
             set /a heic_count+=1
@@ -52,6 +54,7 @@ if "%~1" neq "" (
             set "temp_heic=%TEMP%\%%~nF.heic"
             copy /y "%%~fF" "!temp_heic!" >nul
             "%CONVERTER_PATH%" --files "!temp_heic!" -q 95 -t "!OUTDIR!" --skip-prompt
+            if !ERRORLEVEL! neq 0 set HAS_ERROR=1
             del "!temp_heic!" >nul 2>&1
             echo Converted to: !OUTDIR!\%%~nF.jpg
         ) else (
@@ -93,12 +96,14 @@ if "%~1" neq "" (
     
     if exist *.heic (
         "%CONVERTER_PATH%" --path . -q 95 -t . --skip-prompt --not-recursive
+        if !ERRORLEVEL! neq 0 set HAS_ERROR=1
     )
     
     for %%F in (*.heif) do (
         set "temp_heic=%TEMP%\%%~nF.heic"
         copy /y "%%~fF" "!temp_heic!" >nul
         "%CONVERTER_PATH%" --files "!temp_heic!" -q 95 -t . --skip-prompt
+        if !ERRORLEVEL! neq 0 set HAS_ERROR=1
         del "!temp_heic!" >nul 2>&1
     )
 
@@ -112,7 +117,9 @@ echo.
 echo Conversion completed!
 
 :end
-echo.
-echo Press any key to exit...
-pause >nul
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
 endlocal

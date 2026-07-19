@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set HAS_ERROR=0
 
 :: Split video/audio files into 25-minute segments
 :: Usage: 
@@ -101,6 +102,7 @@ echo Splitting file into !segments! segments...
 echo.
 
 "%FFMPEG_PATH%" -y -i "%input_file%" -c copy -map 0 -segment_time %MAX_LENGTH% -f segment -reset_timestamps 1 "%output_dir%\%file_name%_part%%02d%file_ext%"
+if !ERRORLEVEL! neq 0 set HAS_ERROR=1
 
 echo.
 echo Splitting complete! Output files are in the "%output_dir%" folder.
@@ -108,7 +110,9 @@ echo.
 goto :eof
 
 :end
-echo.
-echo Press any key to exit...
-pause >nul
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
 endlocal

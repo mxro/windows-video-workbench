@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set HAS_ERROR=0
 
 :: Display video metadata information
 :: Usage: 
@@ -81,21 +82,25 @@ set "INPUT=%input_file%"
 echo File metadata (JSON format):
 echo ----------------------------
 "%FFPROBE_PATH%" -v quiet -print_format json -show_format -show_streams "!INPUT!"
+if !ERRORLEVEL! neq 0 set HAS_ERROR=1
 echo.
 
 echo File metadata (readable format):
 echo --------------------------------
 "%FFPROBE_PATH%" -v quiet -show_format -show_streams "!INPUT!"
+if !ERRORLEVEL! neq 0 set HAS_ERROR=1
 echo.
 
 echo Codec information:
 echo ------------------
 "%FFPROBE_PATH%" -v quiet -select_streams v:0 -show_entries stream=codec_name,codec_long_name,width,height,r_frame_rate,bit_rate,pix_fmt,color_space,color_primaries,color_transfer "!INPUT!"
+if !ERRORLEVEL! neq 0 set HAS_ERROR=1
 echo.
 
 echo Audio information:
 echo ------------------
 "%FFPROBE_PATH%" -v quiet -select_streams a:0 -show_entries stream=codec_name,codec_long_name,sample_rate,channels,bit_rate "!INPUT!"
+if !ERRORLEVEL! neq 0 set HAS_ERROR=1
 echo.
 
 echo File completed: "!INPUT!"
@@ -103,7 +108,9 @@ echo.
 goto :eof
 
 :end
-echo.
-echo Press any key to exit...
-pause >nul
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
 endlocal

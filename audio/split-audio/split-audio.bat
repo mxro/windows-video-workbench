@@ -1,5 +1,6 @@
 @echo off
 setlocal EnableDelayedExpansion
+set HAS_ERROR=0
 
 :: Audio Splitter — robust for MP4/M4A using segment muxer
 :: Splits audio into 5-minute parts. Keeps original codec when possible.
@@ -55,7 +56,7 @@ if "%~1" neq "" (
 echo.
 echo Done. Output folder: "%OUTPUT_DIR%"
 
-goto :eof
+goto :end
 
 :process_file
 set "input_file=%~1"
@@ -91,6 +92,7 @@ if errorlevel 1 (
 	  -map 0:a:0 -f segment -segment_time 300 -reset_timestamps 1 -c:a %acodec% -b:a 192k ^
 	  "%file_output_dir%\%base_name%_part%%03d%ext%"
 	echo Re-encode errorlevel: %errorlevel%
+	if errorlevel 1 set HAS_ERROR=1
 )
 
 :: Report parts created
@@ -111,4 +113,9 @@ if !parts_created! gtr 0 (
 goto :eof
 
 :end
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
 endlocal

@@ -4,6 +4,10 @@ set input_file=IMG_4981.MOV
 set output_file=output_all.mp4
 
 %ffmpeg_path% -i "%input_file%" -vf "transpose=2" -c:v libx264 -crf 23 -preset medium -c:a aac -b:a 192k "%output_file%"
-
-echo Conversion complete! Output saved as %output_file%
-pause
+if %ERRORLEVEL% neq 0 (
+    echo.
+    echo Error occurred during conversion. Press any key to exit...
+    pause
+) else (
+    echo Conversion complete! Output saved as %output_file%
+)

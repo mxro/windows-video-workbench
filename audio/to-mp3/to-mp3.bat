@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set HAS_ERROR=0
 
 :: Audio to MP3 Converter
 :: Usage:
@@ -50,31 +51,37 @@ if "%~1" neq "" (
             set /a audio_count+=1
             echo Converting [!audio_count!]: %%~nxF
             "%FFMPEG_PATH%" -y -i "%%~fF" -codec:a libmp3lame -b:a 320k "%OUTPUT_DIR%\%%~nF.mp3"
+            if !ERRORLEVEL! neq 0 set HAS_ERROR=1
             echo Converted to: converted_%TIMESTAMP%\%%~nF.mp3
         ) else if /i "%%~xF"==".flac" (
             set /a audio_count+=1
             echo Converting [!audio_count!]: %%~nxF
             "%FFMPEG_PATH%" -y -i "%%~fF" -codec:a libmp3lame -b:a 320k "%OUTPUT_DIR%\%%~nF.mp3"
+            if !ERRORLEVEL! neq 0 set HAS_ERROR=1
             echo Converted to: converted_%TIMESTAMP%\%%~nF.mp3
         ) else if /i "%%~xF"==".aac" (
             set /a audio_count+=1
             echo Converting [!audio_count!]: %%~nxF
             "%FFMPEG_PATH%" -y -i "%%~fF" -codec:a libmp3lame -b:a 320k "%OUTPUT_DIR%\%%~nF.mp3"
+            if !ERRORLEVEL! neq 0 set HAS_ERROR=1
             echo Converted to: converted_%TIMESTAMP%\%%~nF.mp3
         ) else if /i "%%~xF"==".ogg" (
             set /a audio_count+=1
             echo Converting [!audio_count!]: %%~nxF
             "%FFMPEG_PATH%" -y -i "%%~fF" -codec:a libmp3lame -b:a 320k "%OUTPUT_DIR%\%%~nF.mp3"
+            if !ERRORLEVEL! neq 0 set HAS_ERROR=1
             echo Converted to: converted_%TIMESTAMP%\%%~nF.mp3
         ) else if /i "%%~xF"==".m4a" (
             set /a audio_count+=1
             echo Converting [!audio_count!]: %%~nxF
             "%FFMPEG_PATH%" -y -i "%%~fF" -codec:a libmp3lame -b:a 320k "%OUTPUT_DIR%\%%~nF.mp3"
+            if !ERRORLEVEL! neq 0 set HAS_ERROR=1
             echo Converted to: converted_%TIMESTAMP%\%%~nF.mp3
         ) else if /i "%%~xF"==".wma" (
             set /a audio_count+=1
             echo Converting [!audio_count!]: %%~nxF
             "%FFMPEG_PATH%" -y -i "%%~fF" -codec:a libmp3lame -b:a 320k "%OUTPUT_DIR%\%%~nF.mp3"
+            if !ERRORLEVEL! neq 0 set HAS_ERROR=1
             echo Converted to: converted_%TIMESTAMP%\%%~nF.mp3
         ) else (
             echo Skipped: %%~nxF (not a supported audio file)
@@ -115,6 +122,7 @@ if "%~1" neq "" (
         set /a audio_count+=1
         echo Converting [!audio_count!]: %%~nxF
         "%FFMPEG_PATH%" -y -i "%%~fF" -codec:a libmp3lame -b:a 320k "%OUTPUT_DIR%\%%~nF.mp3"
+        if !ERRORLEVEL! neq 0 set HAS_ERROR=1
         echo Converted to: converted_%TIMESTAMP%\%%~nF.mp3
     )
 
@@ -130,7 +138,9 @@ echo Conversion completed!
 echo Converted files are in the "converted_%TIMESTAMP%" directory.
 
 :end
-echo.
-echo Press any key to exit...
-pause >nul
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
 endlocal

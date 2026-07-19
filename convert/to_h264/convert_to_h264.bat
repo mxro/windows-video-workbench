@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set HAS_ERROR=0
 
 REM Set ffmpeg path
 :: Path to ffmpeg executable
@@ -17,8 +18,14 @@ for %%F in (*.mp4 *.mkv) do (
 
         echo Processing "!INPUT!" -> "!OUTPUT!"
         "%FFMPEG_PATH%" -y -i "!INPUT!" -c:v libx264 -pix_fmt yuv420p -preset slow -crf 23 -c:a copy "!OUTPUT!"
+        if !ERRORLEVEL! neq 0 set HAS_ERROR=1
     )
 )
 
 echo All videos processed.
-pause
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
+endlocal

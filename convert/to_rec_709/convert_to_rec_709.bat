@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set HAS_ERROR=0
 
 :: Convert Rec 2020 to Rec 709 color space
 :: Usage: 
@@ -95,6 +96,7 @@ echo.
 echo File metadata:
 echo --------------
 "%FFPROBE_PATH%" -v quiet -print_format json -show_format -show_streams "!INPUT!"
+if !ERRORLEVEL! neq 0 set HAS_ERROR=1
 echo.
 echo Converting Rec 2020 to Rec 709...
 echo.
@@ -108,6 +110,8 @@ echo.
   -c:a copy ^
   "!OUTPUT!"
 
+if !ERRORLEVEL! neq 0 set HAS_ERROR=1
+
 echo.
 echo Conversion complete for "!INPUT!"
 echo.
@@ -116,7 +120,9 @@ goto :eof
 echo All videos processed.
 
 :end
-echo.
-echo Press any key to exit...
-pause >nul
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
 endlocal

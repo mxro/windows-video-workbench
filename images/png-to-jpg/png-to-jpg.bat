@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set HAS_ERROR=0
 
 :: PNG to JPG Converter
 :: Usage: 
@@ -50,6 +51,7 @@ if "%~1" neq "" (
             set /a png_count+=1
             echo Converting [!png_count!]: %%~nxF
             "%FFMPEG_PATH%" -y -i "%%~fF" -q:v 2 "%OUTPUT_DIR%\%%~nF.jpg"
+            if !ERRORLEVEL! neq 0 set HAS_ERROR=1
             echo Converted to: converted_%TIMESTAMP%\%%~nF.jpg
         ) else (
             echo Skipped: %%~nxF (not a PNG file)
@@ -90,6 +92,7 @@ if "%~1" neq "" (
         set /a png_count+=1
         echo Converting [!png_count!]: %%~nxF
         "%FFMPEG_PATH%" -y -i "%%~fF" -q:v 2 "%OUTPUT_DIR%\%%~nF.jpg"
+        if !ERRORLEVEL! neq 0 set HAS_ERROR=1
         echo Converted to: converted_%TIMESTAMP%\%%~nF.jpg
     )
     
@@ -105,7 +108,9 @@ echo Conversion completed!
 echo Converted files are in the "converted_%TIMESTAMP%" directory.
 
 :end
-echo.
-echo Press any key to exit...
-pause >nul
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
 endlocal

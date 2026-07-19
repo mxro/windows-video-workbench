@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set HAS_ERROR=0
 
 :: Notion Image Preparer
 :: Usage: 
@@ -89,6 +90,7 @@ if /i "!ext!"==".heic" (
     if exist "%CONVERTER_PATH%" (
         set "TMPJPG=!dir!\!name!.tmp.jpg"
         "%CONVERTER_PATH%" --files "!fp!" -q 100 -t "!dir!" --skip-prompt >nul 2>&1
+        if !ERRORLEVEL! neq 0 set HAS_ERROR=1
         if exist "!dir!\!name!.jpg" move /y "!dir!\!name!.jpg" "!TMPJPG!" >nul
         if exist "!TMPJPG!" (
             call :maybe_compress "!TMPJPG!" "!output!"
@@ -107,6 +109,7 @@ if /i "!ext!"==".heic" (
         set "TMPHEIC=%TEMP%\!name!.heic"
         copy /y "!fp!" "!TMPHEIC!" >nul
         "%CONVERTER_PATH%" --files "!TMPHEIC!" -q 100 -t "!dir!" --skip-prompt >nul 2>&1
+        if !ERRORLEVEL! neq 0 set HAS_ERROR=1
         if exist "!dir!\!name!.jpg" move /y "!dir!\!name!.jpg" "!TMPJPG!" >nul
         del "!TMPHEIC!" >nul 2>&1
         if exist "!TMPJPG!" (
@@ -156,10 +159,13 @@ for %%q in (2 3 4 5 6 7 8 10 12 14 17 20 24 28 31) do (
     for %%S in (%2) do set outsize=%%~zS
     if !outsize! leq %MAX_SIZE% goto :eof
 )
+set HAS_ERROR=1
 goto :eof
 
 :end
-echo.
-echo Press any key to exit...
-pause >nul
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
 endlocal

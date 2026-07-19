@@ -1,4 +1,13 @@
 #!/bin/bash
+set -euo pipefail
+
+has_error=0
+
+on_error() {
+    has_error=1
+}
+
+trap on_error ERR
 
 TARGET_DIR_WIN="C:\Users\mxro\Videos\windows-video-workbench"
 
@@ -19,3 +28,9 @@ for item in *; do
 done
 
 echo "Done!"
+
+if [ "$has_error" -eq 1 ]; then
+    echo ""
+    echo "Some errors occurred. Press any key to exit..."
+    read -r -p ""
+fi

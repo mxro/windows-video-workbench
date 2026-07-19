@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set HAS_ERROR=0
 
 :: Merge video/audio files into a single file
 :: Usage: 
@@ -139,6 +140,7 @@ if %ERRORLEVEL% EQU 0 (
     echo.
     echo Error occurred during merging.
     echo Command used: "%FFMPEG_PATH%" -f concat -safe 0 -i "%FILELIST%" -c copy "%OUTPUT_FILE%"
+    set HAS_ERROR=1
 )
 
 :cleanup
@@ -146,7 +148,9 @@ if %ERRORLEVEL% EQU 0 (
 if exist "%FILELIST%" del "%FILELIST%"
 
 :end
-echo.
-echo Press any key to exit...
-pause >nul
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
 endlocal

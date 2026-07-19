@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set HAS_ERROR=0
 
 :: JPEG Compressor
 :: Usage: 
@@ -43,6 +44,7 @@ if "%~1" neq "" (
             set "OUTDIR=%%~dpF"
             set "OUTDIR=!OUTDIR:~0,-1!"
             "%FFMPEG_PATH%" -y -i "%%~fF" -q:v 15 "!OUTDIR!\%%~nF.compressed.jpg"
+            if !ERRORLEVEL! neq 0 set HAS_ERROR=1
             echo Compressed to: !OUTDIR!\%%~nF.compressed.jpg
         ) else if /i "%%~xF"==".jpeg" (
             set /a jpeg_count+=1
@@ -50,6 +52,7 @@ if "%~1" neq "" (
             set "OUTDIR=%%~dpF"
             set "OUTDIR=!OUTDIR:~0,-1!"
             "%FFMPEG_PATH%" -y -i "%%~fF" -q:v 15 "!OUTDIR!\%%~nF.compressed.jpg"
+            if !ERRORLEVEL! neq 0 set HAS_ERROR=1
             echo Compressed to: !OUTDIR!\%%~nF.compressed.jpg
         ) else (
             echo Skipped: %%~nxF (not a JPEG file)
@@ -90,6 +93,7 @@ if "%~1" neq "" (
         set /a jpeg_count+=1
         echo Compressing [!jpeg_count!]: %%~nxF
         "%FFMPEG_PATH%" -y -i "%%~fF" -q:v 15 "%%~dpF%%~nF.compressed.jpg"
+        if !ERRORLEVEL! neq 0 set HAS_ERROR=1
         echo Compressed to: %%~dpF%%~nF.compressed.jpg
     )
     
@@ -104,7 +108,9 @@ echo Compression completed!
 echo Compressed files have been created alongside the originals with the .compressed.jpg suffix.
 
 :end
-echo.
-echo Press any key to exit...
-pause >nul
+if !HAS_ERROR! equ 1 (
+    echo.
+    echo Some errors occurred. Press any key to exit...
+    pause >nul
+)
 endlocal

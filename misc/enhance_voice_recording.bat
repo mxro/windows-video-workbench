@@ -17,6 +17,9 @@ set OUTPUT_FILE=%~dpn1_processed.m4a
 
 :: Apply noise gate and normalization
 "%FFMPEG_PATH%" -i "%INPUT_FILE%" -af "volume=10dB,highpass=f=80,afftdn=nr=20" "%OUTPUT_FILE%"
-
+if %ERRORLEVEL% neq 0 (
+    echo.
+    echo Error occurred during processing. Press any key to exit...
+    pause
+)
 echo Processing complete! Output file: %OUTPUT_FILE%
-pause
